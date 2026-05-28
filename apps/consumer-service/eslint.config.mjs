@@ -30,7 +30,7 @@ export default tseslint.config(
       '@typescript-eslint/no-misused-promises': 'error',
       '@typescript-eslint/no-unsafe-argument': 'error',
       '@typescript-eslint/consistent-type-imports': 'error',
-      'prettier/prettier': 'error',
+      'prettier/prettier': ['error', { endOfLine: 'auto' }],
     },
   },
 );
