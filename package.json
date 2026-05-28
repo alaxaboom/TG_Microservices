@@ -3,20 +3,13 @@
   "version": "1.0.0",
   "description": "NestJS microservices with RabbitMQ and Telegram API",
   "scripts": {
-    "build:contracts": "npm run build --workspace=@app/contracts",
-    "build:rabbitmq-lib": "npm run build --workspace=@app/rabbitmq",
-    "build:logger-lib": "npm run build --workspace=@app/logger",
     "build:producer": "npm run build --workspace=producer-service",
     "build:consumer": "npm run build --workspace=consumer-service",
-    "build:telegram": "npm run build --workspace=telegram-service",
-    "build:libs": "node scripts/build-libs.cjs",
-    "build:apps": "node scripts/build-apps.cjs",
-    "build:all": "node scripts/build-all.cjs"
+    "build:telegram": "npm run build --workspace=telegram-service"
   },
   "type": "commonjs",
   "private": true,
   "workspaces": [
-    "apps/*",
-    "libs/*"
+    "apps/*"
   ]
 }
