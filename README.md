@@ -1,65 +1,56 @@
-# TG Microservices
 
-Three NestJS services:
-- `producer-service` publishes events to RabbitMQ.
-- `consumer-service` consumes events, applies retry policy, and pushes failed messages to DLQ.
-- `telegram-service` sends messages via Telegram Bot API with idempotency safeguard.
+Три сервиса на NestJS:
 
-## RabbitMQ Topology
+- `producer-service` -> принимает `POST /notify` и отправляет событие в RabbitMQ
+- `consumer-service` -> читает очередь, делает retry и отправляет в `telegram-service`
+- `telegram-service` -> отправляет сообщение в Telegram Bot API
 
-- Exchange: `notifications.exchange` (`direct`)
+RabbitMQ:
+
+- Exchange: `notifications.exchange`
 - Queue: `telegram.queue`
 - Routing key: `notification.telegram`
-- Retry queues: `telegram.retry.5s`, `telegram.retry.30s`
+- Retry: `5s -> 30s -> DLQ`
 - DLQ: `telegram.dlq`
 
-Retry chain:
-1. attempt 1
-2. retry after 5s
-3. retry after 30s
-4. move to DLQ
+## Быстрый запуск через Docker
 
-## Endpoints
-
-- Producer:
-  - `POST /notify`
-  - `GET /health`
-  - `GET /docs`
-- Consumer:
-  - `GET /health`
-- Telegram:
-  - `POST /send`
-  - `GET /health`
-  - `GET /docs`
-
-## Basic local flow
-
-1. Set bot token in `apps/telegram-service/.env.example`.
-2. Start stack with docker compose from `deploy`.
-3. Call `POST /notify` in producer.
-4. Observe processing logs and RabbitMQ queues.
-
-## Local run without Docker
-
-If Docker is unavailable on your machine:
-
-1. Use any reachable RabbitMQ instance (local install or remote host).
-2. Create real `.env` files from `.env.example` in:
+1. Создай файлы:
    - `apps/producer-service/.env`
    - `apps/consumer-service/.env`
    - `apps/telegram-service/.env`
-3. Set the same RabbitMQ URL in producer and consumer `.env`.
-4. Build all:
-   - `npm run build:all`
-5. Start each service in a separate terminal:
-   - `npm run start:dev --workspace=producer-service`
-   - `npm run start:dev --workspace=consumer-service`
-   - `npm run start:dev --workspace=telegram-service`
+2. Скопируй значения из `.env.example`
+ ## Или командой 
 
-## Docker run for reviewer/server
+ ```bash
+cp .env.example .env
+```
 
-When Docker is available:
+ можно сразу создать .env из .env.example
+ 
+3. В `apps/telegram-service/.env` укажи реальный `TELEGRAM_BOT_TOKEN`
+4. Запусти из корневой папки:
 
-1. Ensure env files exist (copy from examples if needed).
-2. Run from `deploy`:
-   - `docker compose up --build`
+```bash
+docker compose up --build -d
+```
+
+Проверка:
+
+- `http://<HOST>:3001/health`
+- `http://<HOST>:3002/health`
+- `http://<HOST>:3003/health`
+- `http://<HOST>:3001/docs`
+- `http://<HOST>:3003/docs`
+- `http://<HOST>:15672` (RabbitMQ UI)
+
+Тестовый запрос:
+
+`POST http://<HOST>:3001/notify`
+
+```json
+{
+  "chatId": "айди_чата",
+  "message": "Test message from microservices"
+}
+```

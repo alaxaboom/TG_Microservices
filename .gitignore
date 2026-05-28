@@ -1,8 +1,6 @@
-# dependencies
 node_modules/
 **/node_modules/
 
-# build outputs
 dist/
 build/
 coverage/
@@ -11,7 +9,6 @@ coverage/
 **/coverage/
 *.tsbuildinfo
 
-# env files
 .env
 .env.*
 !.env.example
@@ -19,7 +16,6 @@ coverage/
 **/.env.*
 !**/.env.example
 
-# logs
 logs/
 *.log
 npm-debug.log*
@@ -27,11 +23,9 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# test artifacts
 .nyc_output/
 junit.xml
 
-# IDE/editor
 .vscode/
 .idea/
 *.suo
@@ -39,19 +33,16 @@ junit.xml
 *.njsproj
 *.sln
 
-# OS files
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# temp/cache
 tmp/
 temp/
 .cache/
 .turbo/
 .eslintcache
 
-# runtime artifacts
 pids/
 *.pid
 *.seed
