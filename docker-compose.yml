@@ -7,10 +7,10 @@ services:
 
   producer-service:
     build:
-      context: ..
+      context: .
       dockerfile: apps/producer-service/Dockerfile
     env_file:
-      - ../apps/producer-service/.env
+      - apps/producer-service/.env
     ports:
       - '3001:3001'
     depends_on:
@@ -18,10 +18,10 @@ services:
 
   consumer-service:
     build:
-      context: ..
+      context: .
       dockerfile: apps/consumer-service/Dockerfile
     env_file:
-      - ../apps/consumer-service/.env
+      - apps/consumer-service/.env
     ports:
       - '3002:3002'
     depends_on:
@@ -30,9 +30,9 @@ services:
 
   telegram-service:
     build:
-      context: ..
+      context: .
       dockerfile: apps/telegram-service/Dockerfile
     env_file:
-      - ../apps/telegram-service/.env
+      - apps/telegram-service/.env
     ports:
       - '3003:3003'
