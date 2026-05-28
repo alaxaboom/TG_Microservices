@@ -20,7 +20,7 @@ RabbitMQ:
    - `apps/consumer-service/.env`
    - `apps/telegram-service/.env`
 2. Скопируй значения из `.env.example`
-3. 
+   
  Или командой 
 
  ```bash
