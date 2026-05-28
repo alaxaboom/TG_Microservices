@@ -1,0 +1,38 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+
+  producer-service:
+    build:
+      context: ..
+      dockerfile: apps/producer-service/Dockerfile
+    env_file:
+      - ../apps/producer-service/.env
+    ports:
+      - '3001:3001'
+    depends_on:
+      - rabbitmq
+
+  consumer-service:
+    build:
+      context: ..
+      dockerfile: apps/consumer-service/Dockerfile
+    env_file:
+      - ../apps/consumer-service/.env
+    ports:
+      - '3002:3002'
+    depends_on:
+      - rabbitmq
+      - telegram-service
+
+  telegram-service:
+    build:
+      context: ..
+      dockerfile: apps/telegram-service/Dockerfile
+    env_file:
+      - ../apps/telegram-service/.env
+    ports:
+      - '3003:3003'
