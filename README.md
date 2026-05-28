@@ -20,13 +20,14 @@ RabbitMQ:
    - `apps/consumer-service/.env`
    - `apps/telegram-service/.env`
 2. Скопируй значения из `.env.example`
- <!-- Или командой 
+3. 
+ Или командой 
 
  ```bash
 cp .env.example .env
 ```
 
- можно сразу создать .env из .env.example -->
+ можно сразу создать .env из .env.example 
  
 3. В `apps/telegram-service/.env` укажи реальный `TELEGRAM_BOT_TOKEN`
 4. Запусти из корневой папки:
