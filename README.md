@@ -40,7 +40,7 @@ Redis:
    cp apps/telegram-service/.env.example apps/telegram-service/.env
    ```
 
-3. Теперь нужно сделать телеграмм бота, чтобы получить токен и вставить его в  `apps/telegram-service/.env` в поле `TELEGRAM_BOT_TOKEN`
+3. Сделай телеграмм бота, чтобы получить токен и вставить его в  `apps/telegram-service/.env` в поле `TELEGRAM_BOT_TOKEN`
 4. Запусти из корневой папки:
 
 ```bash
