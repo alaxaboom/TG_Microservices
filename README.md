@@ -47,19 +47,6 @@ Redis:
 docker compose up --build -d
 ```
 
-Если очередь `telegram.queue` уже существовала без dead-letter, один раз пересоздай volumes:
-
-```bash
-docker compose down -v
-docker compose up --build -d
-```
-
-После изменений зависимостей из корня:
-
-```bash
-npm install
-```
-
 Проверка:
 
 - `http://<HOST>:3001/health`
