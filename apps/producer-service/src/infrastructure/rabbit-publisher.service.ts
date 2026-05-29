@@ -54,13 +54,15 @@ export class RabbitPublisherService implements OnModuleDestroy {
         const routingKey = this.configService.get<string>('RABBITMQ_ROUTING_KEY', 'notification.telegram');
         const body = Buffer.from(JSON.stringify(event), 'utf-8');
 
-        await channel.publish(exchange, routingKey, body, {
+        const confirmed = await channel.publish(exchange, routingKey, body, {
           contentType: 'application/json',
           persistent: true,
           messageId: event.eventId,
           headers: { 'x-attempt': 1 },
         });
-        await channel.waitForConfirms();
+        if (!confirmed) {
+          throw new Error('Broker did not confirm message publish');
+        }
 
         this.logger.log(`Event published and confirmed by broker: ${event.eventId}`);
         return;
