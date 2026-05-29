@@ -40,10 +40,8 @@ Redis:
    cp apps/telegram-service/.env.example apps/telegram-service/.env
    ```
 
-3. Теперь нужно сделать телеграмм бота, чтобы получить токен
-   
-   В `apps/telegram-service/.env` укажи реальный `TELEGRAM_BOT_TOKEN`
-5. Запусти из корневой папки:
+3. Теперь нужно сделать телеграмм бота, чтобы получить токен и вставить его в  `apps/telegram-service/.env` в поле `TELEGRAM_BOT_TOKEN`
+4. Запусти из корневой папки:
 
 ```bash
 docker compose up --build -d
