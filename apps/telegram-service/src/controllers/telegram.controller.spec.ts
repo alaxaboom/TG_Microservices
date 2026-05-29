@@ -7,8 +7,8 @@ const TEST_EVENT_ID = 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22';
 const TEST_CHAT_ID = '100000002';
 
 describe('TelegramController', () => {
-  const isProcessedMock = jest.fn<boolean, [string]>();
-  const markProcessedMock = jest.fn<void, [string]>();
+  const isProcessedMock = jest.fn<Promise<boolean>, [string]>();
+  const markProcessedMock = jest.fn<Promise<void>, [string]>();
   const sendMessageMock = jest.fn<Promise<void>, [string, string]>();
 
   const processedEventsRepository = {
@@ -25,7 +25,7 @@ describe('TelegramController', () => {
   });
 
   it('skips duplicate event without calling Telegram API', async () => {
-    isProcessedMock.mockReturnValue(true);
+    isProcessedMock.mockResolvedValue(true);
     const controller = new TelegramController(
       processedEventsRepository,
       telegramApiService,

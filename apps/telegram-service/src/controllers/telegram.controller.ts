@@ -18,13 +18,13 @@ export class TelegramController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Send telegram notification' })
   async send(@Body() dto: SendTelegramDto): Promise<{ status: 'sent' | 'skipped'; eventId: string }> {
-    if (this.processedEventsRepository.isProcessed(dto.eventId)) {
+    if (await this.processedEventsRepository.isProcessed(dto.eventId)) {
       this.logger.log(`Skip duplicated send event: ${dto.eventId}`);
       return { status: 'skipped', eventId: dto.eventId };
     }
 
     await this.telegramApiService.sendMessage(dto.chatId, dto.message);
-    this.processedEventsRepository.markProcessed(dto.eventId);
+    await this.processedEventsRepository.markProcessed(dto.eventId);
     this.logger.log(`Telegram message sent for event: ${dto.eventId}`);
     return { status: 'sent', eventId: dto.eventId };
   }

@@ -12,10 +12,12 @@ const TEST_MESSAGE = 'Test notification';
 
 describe('RabbitPublisherService', () => {
   const publishMock = jest.fn<Promise<void>, [string, string, Buffer, Record<string, unknown>]>();
+  const waitForConfirmsMock = jest.fn<Promise<void>, []>();
   const createChannelMock = jest.fn<ChannelWrapper, [unknown]>();
 
   const channelWrapper = {
     publish: publishMock,
+    waitForConfirms: waitForConfirmsMock,
     close: jest.fn().mockResolvedValue(undefined),
   } as unknown as ChannelWrapper;
 
@@ -31,6 +33,7 @@ describe('RabbitPublisherService', () => {
     jest.clearAllMocks();
     createChannelMock.mockReturnValue(channelWrapper);
     publishMock.mockResolvedValue(undefined);
+    waitForConfirmsMock.mockResolvedValue(undefined);
     (connect as jest.MockedFunction<typeof connect>).mockReturnValue(connection);
     getMock.mockImplementation((key: string, defaultValue: string) => {
       if (key === 'RABBITMQ_URL') return 'amqp://guest:guest@rabbitmq:5672';
@@ -40,12 +43,13 @@ describe('RabbitPublisherService', () => {
     });
   });
 
-  it('publishes event with routing key and messageId', async () => {
+  it('publishes event with routing key, messageId and broker confirm', async () => {
     const service = new RabbitPublisherService(configService);
 
     const eventId = await service.publish(TEST_CHAT_ID, TEST_MESSAGE);
 
     expect(publishMock).toHaveBeenCalledTimes(1);
+    expect(waitForConfirmsMock).toHaveBeenCalledTimes(1);
     const [exchange, routingKey, body, options] = publishMock.mock.calls[0];
     const payload = JSON.parse(body.toString('utf-8')) as {
       eventId: string;
@@ -58,5 +62,6 @@ describe('RabbitPublisherService', () => {
     expect(payload.payload.chatId).toBe(TEST_CHAT_ID);
     expect(payload.payload.message).toBe(TEST_MESSAGE);
     expect(options.messageId).toBe(eventId);
+    expect(createChannelMock).toHaveBeenCalledWith(expect.objectContaining({ confirm: true }));
   });
 });

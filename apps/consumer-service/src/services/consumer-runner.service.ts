@@ -15,6 +15,7 @@ export class ConsumerRunnerService implements OnModuleDestroy {
   private readonly queue: string;
   private readonly routingKey: string;
   private readonly dlq: string;
+  private readonly dlqRoutingKey: string;
   private readonly retryQueue5s: string;
   private readonly retryQueue30s: string;
 
@@ -27,6 +28,10 @@ export class ConsumerRunnerService implements OnModuleDestroy {
     this.queue = this.configService.get<string>('RABBITMQ_QUEUE', 'telegram.queue');
     this.routingKey = this.configService.get<string>('RABBITMQ_ROUTING_KEY', 'notification.telegram');
     this.dlq = this.configService.get<string>('RABBITMQ_DLQ', 'telegram.dlq');
+    this.dlqRoutingKey = this.configService.get<string>(
+      'RABBITMQ_DLQ_ROUTING_KEY',
+      'notification.dlq',
+    );
     this.retryQueue5s = this.configService.get<string>('RABBITMQ_RETRY_5S_QUEUE', 'telegram.retry.5s');
     this.retryQueue30s = this.configService.get<string>('RABBITMQ_RETRY_30S_QUEUE', 'telegram.retry.30s');
   }
@@ -49,7 +54,14 @@ export class ConsumerRunnerService implements OnModuleDestroy {
   private async setupTopology(channel: ConfirmChannel): Promise<void> {
     await channel.assertExchange(this.exchange, 'direct', { durable: true });
 
-    await channel.assertQueue(this.queue, { durable: true });
+    await channel.assertQueue(this.dlq, { durable: true });
+    await channel.bindQueue(this.dlq, this.exchange, this.dlqRoutingKey);
+
+    await channel.assertQueue(this.queue, {
+      durable: true,
+      deadLetterExchange: this.exchange,
+      deadLetterRoutingKey: this.dlqRoutingKey,
+    });
     await channel.bindQueue(this.queue, this.exchange, this.routingKey);
 
     await channel.assertQueue(this.retryQueue5s, {
@@ -64,8 +76,6 @@ export class ConsumerRunnerService implements OnModuleDestroy {
       deadLetterRoutingKey: this.routingKey,
       messageTtl: 30000,
     });
-
-    await channel.assertQueue(this.dlq, { durable: true });
   }
 
   private async handleMessage(channel: ConfirmChannel, message: ConsumeMessage | null): Promise<void> {
@@ -77,18 +87,18 @@ export class ConsumerRunnerService implements OnModuleDestroy {
     try {
       event = JSON.parse(message.content.toString('utf-8')) as NotificationEvent;
     } catch {
-      this.logger.error('Invalid JSON payload, message rejected');
+      this.logger.error('Invalid JSON payload, message moved to DLQ via dead-letter');
       channel.nack(message, false, false);
       return;
     }
 
     if (!event.eventId || !event.payload?.chatId || !event.payload?.message) {
-      this.logger.error('Invalid event payload, message rejected');
+      this.logger.error('Invalid event payload, message moved to DLQ via dead-letter');
       channel.nack(message, false, false);
       return;
     }
 
-    if (this.processedEventsRepository.isProcessed(event.eventId)) {
+    if (await this.processedEventsRepository.isProcessed(event.eventId)) {
       this.logger.log(`Skip duplicated event: ${event.eventId}`);
       channel.ack(message);
       return;
@@ -97,7 +107,7 @@ export class ConsumerRunnerService implements OnModuleDestroy {
     const currentAttempt = this.getAttempt(message);
     try {
       await this.telegramClientService.send(event);
-      this.processedEventsRepository.markProcessed(event.eventId);
+      await this.processedEventsRepository.markProcessed(event.eventId);
       this.logger.log(`Event processed: ${event.eventId}`);
       channel.ack(message);
     } catch (error) {

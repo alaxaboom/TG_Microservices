@@ -1,10 +1,14 @@
 # TG Microservices
 
+Реализованы producer/consumer/telegram на NestJS + RabbitMQ + Docker. Добавлены publisher confirms, Redis-идемпотентность, retry/DLQ, Swagger и unit/e2e тесты.
+
 Три сервиса на NestJS:
 
 - `producer-service` -> принимает `POST /notify` и отправляет событие в RabbitMQ
 - `consumer-service` -> читает очередь, делает retry и отправляет в `telegram-service`
 - `telegram-service` -> отправляет сообщение в Telegram Bot API
+
+Полноценную clean architecture (domain-слой, shared libs, порты/адаптеры) намеренно не выносил: для объёма тестового задания это лишняя сложность, а текущее разделение на controller / service / infrastructure уже даёт понятную структуру и изоляцию ответственности.
 
 RabbitMQ:
 
@@ -12,7 +16,13 @@ RabbitMQ:
 - Queue: `telegram.queue`
 - Routing key: `notification.telegram`
 - Retry: `5s -> 30s -> DLQ`
-- DLQ: `telegram.dlq`
+- DLQ: `telegram.dlq` (routing key: `notification.dlq`)
+- Невалидные сообщения из основной очереди уходят в DLQ через dead-letter
+
+Redis:
+
+- Общее хранилище идемпотентности для `consumer-service` и `telegram-service`
+- Префикс ключей: `processed-events:notification:{eventId}`
 
 ## Быстрый запуск через Docker
 
@@ -37,6 +47,19 @@ RabbitMQ:
 docker compose up --build -d
 ```
 
+Если очередь `telegram.queue` уже существовала без dead-letter, один раз пересоздай volumes:
+
+```bash
+docker compose down -v
+docker compose up --build -d
+```
+
+После изменений зависимостей из корня:
+
+```bash
+npm install
+```
+
 Проверка:
 
 - `http://<HOST>:3001/health`
@@ -45,6 +68,17 @@ docker compose up --build -d
 - `http://<HOST>:3001/docs`
 - `http://<HOST>:3003/docs`
 - `http://<HOST>:15672` (RabbitMQ UI)
+
+Tests:
+
+```bash
+npm test --workspace=producer-service
+npm test --workspace=consumer-service
+npm test --workspace=telegram-service
+npm run test:e2e --workspace=producer-service
+npm run test:e2e --workspace=consumer-service
+npm run test:e2e --workspace=telegram-service
+```
 
 Тестовый запрос:
 

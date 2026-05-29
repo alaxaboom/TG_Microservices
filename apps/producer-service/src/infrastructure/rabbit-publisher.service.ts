@@ -60,8 +60,9 @@ export class RabbitPublisherService implements OnModuleDestroy {
           messageId: event.eventId,
           headers: { 'x-attempt': 1 },
         });
+        await channel.waitForConfirms();
 
-        this.logger.log(`Event published: ${event.eventId}`);
+        this.logger.log(`Event published and confirmed by broker: ${event.eventId}`);
         return;
       } catch (error) {
         const errMessage = error instanceof Error ? error.message : 'Unknown publish error';
@@ -83,6 +84,7 @@ export class RabbitPublisherService implements OnModuleDestroy {
     const uri = this.configService.get<string>('RABBITMQ_URL', 'amqp://guest:guest@localhost:5672');
     this.connection = connect([uri]);
     this.channel = this.connection.createChannel({
+      confirm: true,
       setup: async (channel) => {
         const exchange = this.configService.get<string>('RABBITMQ_EXCHANGE', 'notifications.exchange');
         await channel.assertExchange(exchange, 'direct', { durable: true });

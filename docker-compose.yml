@@ -5,6 +5,11 @@ services:
       - '5672:5672'
       - '15672:15672'
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+
   producer-service:
     build:
       context: .
@@ -26,6 +31,7 @@ services:
       - '3002:3002'
     depends_on:
       - rabbitmq
+      - redis
       - telegram-service
 
   telegram-service:
@@ -36,3 +42,5 @@ services:
       - apps/telegram-service/.env
     ports:
       - '3003:3003'
+    depends_on:
+      - redis
