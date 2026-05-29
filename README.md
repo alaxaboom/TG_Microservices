@@ -24,7 +24,7 @@ Redis:
 - Общее хранилище идемпотентности для `consumer-service` и `telegram-service`
 - Префикс ключей: `processed-events:notification:{eventId}`
 
-## Быстрый запуск через Docker
+## Запуск через Docker
 
 1. Создай файлы:
    - `apps/producer-service/.env`
@@ -40,8 +40,10 @@ Redis:
    cp apps/telegram-service/.env.example apps/telegram-service/.env
    ```
 
-3. В `apps/telegram-service/.env` укажи реальный `TELEGRAM_BOT_TOKEN`
-4. Запусти из корневой папки:
+3. Теперь нужно сделать телеграмм бота, чтобы получить токен
+   
+   В `apps/telegram-service/.env` укажи реальный `TELEGRAM_BOT_TOKEN`
+5. Запусти из корневой папки:
 
 ```bash
 docker compose up --build -d
